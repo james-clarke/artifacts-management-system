@@ -3,6 +3,7 @@ package com.example.hogwarts.view;
 import com.example.hogwarts.controller.ArtifactController;
 import com.example.hogwarts.data.DataStore;
 import com.example.hogwarts.model.Artifact;
+import com.example.hogwarts.model.Wizard;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -39,7 +40,6 @@ public class ArtifactView extends VBox{
             private final Button editButton = new Button("Edit");
             private final Button deleteButton = new Button("Delete");
             private final HBox buttons = new HBox(5);
-
             {
                 viewButton.setOnAction(e -> {
                     Artifact artifact = getTableView().getItems().get(getIndex());
@@ -66,6 +66,7 @@ public class ArtifactView extends VBox{
                     });
                 });
             }
+            
 
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -82,8 +83,22 @@ public class ArtifactView extends VBox{
                 }
             }
         });
+        
+        TableColumn<Artifact, String> ownerCol = new TableColumn<>("Owner");
+        ownerCol.setComparator((owner1, owner2) -> {
+        	if (owner1.contentEquals("-")) { return 1; }
+        	if (owner2.contentEquals("-")) { return -1; }
+        	return owner1.compareTo(owner2);
+        });
+        ownerCol.setCellValueFactory(cell -> {
+        	Wizard owner = cell.getValue().getOwner();
+        	if (owner != null) {
+        		return new ReadOnlyStringWrapper(owner.getName());
+        	}
+        	return new ReadOnlyStringWrapper("-");
+        });
 
-        artifactTable.getColumns().setAll(idCol, nameCol, actionCol);
+        artifactTable.getColumns().setAll(idCol, nameCol, actionCol, ownerCol);
         artifactTable.setItems(artifactData);
         artifactTable.setPrefHeight(300);
         return artifactTable;
