@@ -16,6 +16,8 @@ public class ArtifactView extends VBox{
     private final ArtifactController controller;
     private final TableView<Artifact> artifactTable;
     private final ObservableList<Artifact> artifactData;
+    
+    private static Runnable artifactSignal;
 
     public ArtifactView() {
         this.controller = new ArtifactController();
@@ -25,6 +27,14 @@ public class ArtifactView extends VBox{
         setSpacing(10);
         setPadding(new Insets(10));
         getChildren().addAll(createTable(), createButtons());
+        
+        // lambda to refresh table data
+		artifactSignal = () -> artifactData.setAll(controller.findAllArtifacts());
+    }
+    
+	// adds auto-update functionality across views
+    public static void updateTable() {
+    	artifactSignal.run();
     }
 
     private TableView<Artifact> createTable() {

@@ -36,7 +36,8 @@ public class DataStore {
 
         Artifact a1 = new Artifact("Invisibility Cloak", "A magical cloak that makes the wearer invisible.");
         Artifact a2 = new Artifact("Time-Turner", "A device used for time travel.");
-        Artifact a3 = new Artifact("Rob Riggle", "The man, the myth, the legend.");
+        Artifact a3 = new Artifact("Rob Riggle", "Like Kobiyashi...");
+
         this.addArtifact(a1);
         this.addArtifact(a2);
         this.addArtifact(a3);

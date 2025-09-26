@@ -4,6 +4,7 @@ import com.example.hogwarts.controller.WizardController;
 import com.example.hogwarts.data.DataStore;
 import com.example.hogwarts.model.Artifact;
 import com.example.hogwarts.model.Wizard;
+import com.example.hogwarts.view.ArtifactView;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -153,6 +154,7 @@ public class WizardView extends VBox{
             controller.assignArtifactToWizard(wizard, artifact);
             wizardData.setAll(controller.findAllWizards());
             wizardTable.getSelectionModel().select(wizard);
+            ArtifactView.updateTable();
         });
     }
 
