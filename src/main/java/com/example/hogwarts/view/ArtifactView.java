@@ -1,6 +1,7 @@
 package com.example.hogwarts.view;
 
 import com.example.hogwarts.controller.ArtifactController;
+import com.example.hogwarts.controller.WizardController;
 import com.example.hogwarts.data.DataStore;
 import com.example.hogwarts.model.Artifact;
 import com.example.hogwarts.model.Wizard;
@@ -14,6 +15,7 @@ import javafx.scene.layout.*;
 
 public class ArtifactView extends VBox{
     private final ArtifactController controller;
+    private final WizardController wizController;
     private final TableView<Artifact> artifactTable;
     private final ObservableList<Artifact> artifactData;
     
@@ -21,6 +23,7 @@ public class ArtifactView extends VBox{
 
     public ArtifactView() {
         this.controller = new ArtifactController();
+        this.wizController = new WizardController();
         this.artifactTable = new TableView<>();
         this.artifactData = FXCollections.observableArrayList(controller.findAllArtifacts());
 
@@ -49,6 +52,7 @@ public class ArtifactView extends VBox{
             private final Button viewButton = new Button("View");
             private final Button editButton = new Button("Edit");
             private final Button deleteButton = new Button("Delete");
+            private final Button unassignButton = new Button("Unassign");
             private final HBox buttons = new HBox(5);
             {
                 viewButton.setOnAction(e -> {
@@ -75,6 +79,12 @@ public class ArtifactView extends VBox{
                         }
                     });
                 });
+                
+                unassignButton.setOnAction(e -> {
+					Artifact artifact = getTableView().getItems().get(getIndex());
+					Wizard owner = artifact.getOwner();
+					showUnassignArtifactDialogFor(owner, artifact);
+                });
             }
             
 
@@ -87,7 +97,7 @@ public class ArtifactView extends VBox{
                     buttons.getChildren().clear();
                     buttons.getChildren().add(viewButton);
                     if (DataStore.getInstance().getCurrentUser().isAdmin()) {
-                        buttons.getChildren().addAll(editButton, deleteButton);
+                        buttons.getChildren().addAll(editButton, deleteButton, unassignButton);
                     }
                     setGraphic(buttons);
                 }
@@ -201,5 +211,26 @@ public class ArtifactView extends VBox{
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         dialog.showAndWait();
+    }
+    
+    private void showUnassignArtifactDialogFor(Wizard wizard, Artifact artifact) {
+    	if (artifact == null || wizard == null) {
+    		Alert alert = new Alert(Alert.AlertType.INFORMATION, "No assigned artifacts available.");
+            alert.setHeaderText("Nothing to unassign");
+            alert.showAndWait();
+            return;
+    	}
+    	
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Unassign Artifact");
+        confirm.setHeaderText("Unassign Artifact");
+        confirm.setContentText("Are you sure you want to unassign \"" + artifact.getName() + "\" from \"" + wizard.getName() + "\"");
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+            	wizController.unassignArtifactFromWizard(wizard, artifact);
+            	artifactData.setAll(controller.findAllArtifacts());
+            	artifactTable.getSelectionModel().select(artifact);
+            }
+    	});
     }
 }

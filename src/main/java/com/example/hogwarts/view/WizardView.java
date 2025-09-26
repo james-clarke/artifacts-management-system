@@ -42,6 +42,7 @@ public class WizardView extends VBox{
             private final Button editButton = new Button("Edit");
             private final Button deleteButton = new Button("Delete");
             private final Button assignButton = new Button("Assign");
+            private final Button unassignButton = new Button("Unassign");
             private final HBox buttons = new HBox(5);
 
             {
@@ -73,6 +74,11 @@ public class WizardView extends VBox{
                     Wizard wizard = getTableView().getItems().get(getIndex());
                     showAssignArtifactDialogFor(wizard);
                 });
+                
+                unassignButton.setOnAction(e -> {
+					Wizard wizard = getTableView().getItems().get(getIndex());
+					showUnassignArtifactDialogFor(wizard);
+                });
             }
 
             @Override
@@ -84,7 +90,7 @@ public class WizardView extends VBox{
                     buttons.getChildren().clear();
                     buttons.getChildren().add(viewButton);
                     if (DataStore.getInstance().getCurrentUser().isAdmin()) {
-                        buttons.getChildren().addAll(editButton, deleteButton, assignButton);
+                        buttons.getChildren().addAll(editButton, deleteButton, assignButton, unassignButton);
                     }
                     setGraphic(buttons);
                 }
@@ -156,6 +162,36 @@ public class WizardView extends VBox{
             wizardTable.getSelectionModel().select(wizard);
             ArtifactView.updateTable();
         });
+    }
+    
+    public void showUnassignArtifactDialogFor(Wizard wizard) {
+    	var owned = FXCollections.observableArrayList(controller.getAssignedArtifacts(wizard));
+    	
+    	if (owned.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "No assigned artifacts available.");
+            alert.setHeaderText("Nothing to unassign");
+            alert.showAndWait();
+            return;
+        }
+        
+        ChoiceDialog<Artifact> dialog = new ChoiceDialog<>(owned.get(0), owned);
+        dialog.setTitle("Unassign Artifact");
+        dialog.setHeaderText("Unassign from " + wizard.getName());
+
+        dialog.showAndWait().ifPresent(artifact -> {
+        	Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+            confirm.setTitle("Confirm Unassign Artifact");
+            confirm.setHeaderText("Unassign Artifact");
+            confirm.setContentText("Are you sure you want to unassign \"" + artifact.getName() + "\" from \"" + wizard.getName() + "\"");
+            confirm.showAndWait().ifPresent(response -> {
+            	if (response == ButtonType.OK) {
+            		controller.unassignArtifactFromWizard(wizard, artifact);
+            		wizardData.setAll(controller.findAllWizards());
+            		wizardTable.getSelectionModel().select(wizard);
+            		ArtifactView.updateTable();
+            	}
+        	});
+    	});
     }
 
     private void showViewWizardDialog(Wizard wizard) {

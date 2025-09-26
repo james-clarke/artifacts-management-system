@@ -35,10 +35,20 @@ public class WizardController {
     public boolean assignArtifactToWizard(Wizard wizard, Artifact artifact) {
         return this.store.assignArtifactToWizard(artifact.getId(), wizard.getId());
     }
+    
+    public boolean unassignArtifactFromWizard(Wizard wizard, Artifact artifact) {
+    	return this.store.unassignArtifactFromWizard(wizard.getId(), artifact.getId());
+    }
 
     public List<Artifact> getUnassignedArtifacts() {
         return this.store.findAllArtifacts().stream()
                 .filter(a -> a.getOwner() == null)
                 .collect(Collectors.toList());
+    }
+    
+    public List<Artifact> getAssignedArtifacts(Wizard wizard) {
+    	return this.store.findAllArtifacts().stream()
+    			.filter(a -> a.getOwner() != null && a.getOwner().getId() == wizard.getId())
+    			.collect(Collectors.toList());
     }
 }
