@@ -4,6 +4,11 @@ import com.example.hogwarts.model.Artifact;
 import com.example.hogwarts.model.Wizard;
 import com.example.hogwarts.model.Role;
 import com.example.hogwarts.model.User;
+import com.example.hogwarts.model.Transfer;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.util.*;
 
@@ -17,9 +22,11 @@ public class DataStore {
     private final List<User> users = new ArrayList<>();
     private final Map<Integer, Wizard> wizards = new HashMap<>();
     private final Map<Integer, Artifact> artifacts = new HashMap<>();
+    private final Map<Integer, Transfer> transfers = new HashMap<>();
 
     private int wizardIdCounter = 1; // Wizard ID generator
     private int artifactIdCounter = 1; // Artifact ID generator
+    private int transferIdCounter = 1;
 
     private User currentUser; // Currently authenticated user
 
@@ -57,6 +64,19 @@ public class DataStore {
                 .filter(u -> u.getUsername().equals(username) && u.getPassword().equals(password))
                 .findFirst()
                 .orElse(null);
+    }
+    
+    // Transfers
+    public Transfer addTransfer(Transfer transfer) {
+    	transfer.setId(transferIdCounter++);
+    	this.transfers.put(transfer.getId(), transfer);
+    	return transfer;
+    }
+    
+    public Collection<Transfer> findAllTransfersById(int id) {
+		return this.transfers.values().stream()
+        	.filter(transfer -> transfer.getArtifact().getId() == id)
+        	.collect(Collectors.toList());
     }
 
     // Wizards

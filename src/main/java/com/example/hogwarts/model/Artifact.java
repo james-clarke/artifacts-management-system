@@ -2,16 +2,22 @@ package com.example.hogwarts.model;
 
 import java.util.Objects;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class Artifact {
     private int id;
     private String name;
     private String description;
     private Wizard owner; // can be null
+    private final List<Transfer> transfers = new ArrayList<>();
 
     public Artifact(String name, String description) {
         this.name = Objects.requireNonNullElse(name, "name must not be null");
         this.description = Objects.requireNonNullElse(description, "description must not be null");
         this.owner = null;
+        
     }
 
     public int getId() { return id; }

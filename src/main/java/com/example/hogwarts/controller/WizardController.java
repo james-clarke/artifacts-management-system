@@ -3,6 +3,9 @@ package com.example.hogwarts.controller;
 import com.example.hogwarts.data.DataStore;
 import com.example.hogwarts.model.Artifact;
 import com.example.hogwarts.model.Wizard;
+import com.example.hogwarts.model.Transfer;
+
+import com.example.hogwarts.controller.TransferController;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,6 +13,7 @@ import java.util.stream.Collectors;
 
 public class WizardController {
     private final DataStore store = DataStore.getInstance();
+    private final TransferController transferController = new TransferController();
 
     public Collection<Wizard> findAllWizards() {
         return this.store.findAllWizards();
@@ -33,10 +37,12 @@ public class WizardController {
     }
 
     public boolean assignArtifactToWizard(Wizard wizard, Artifact artifact) {
+		transferController.addTransfer("assign", artifact, wizard);
         return this.store.assignArtifactToWizard(artifact.getId(), wizard.getId());
     }
     
     public boolean unassignArtifactFromWizard(Wizard wizard, Artifact artifact) {
+		transferController.addTransfer("unassign", artifact, wizard);
     	return this.store.unassignArtifactFromWizard(wizard.getId(), artifact.getId());
     }
 

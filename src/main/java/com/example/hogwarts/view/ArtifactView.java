@@ -2,9 +2,12 @@ package com.example.hogwarts.view;
 
 import com.example.hogwarts.controller.ArtifactController;
 import com.example.hogwarts.controller.WizardController;
+import com.example.hogwarts.controller.TransferController;
 import com.example.hogwarts.data.DataStore;
 import com.example.hogwarts.model.Artifact;
 import com.example.hogwarts.model.Wizard;
+import com.example.hogwarts.model.Wizard;
+import com.example.hogwarts.model.Transfer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -14,9 +17,12 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+import java.util.Collection;
+
 public class ArtifactView extends VBox{
     private final ArtifactController controller;
     private final WizardController wizController;
+    private final TransferController transferController;
     private final TableView<Artifact> artifactTable;
 	private final ObservableList<Artifact> masterData;
 	private final FilteredList<Artifact> filteredData;
@@ -26,6 +32,7 @@ public class ArtifactView extends VBox{
     public ArtifactView() {
         this.controller = new ArtifactController();
         this.wizController = new WizardController();
+        this.transferController = new TransferController();
         this.artifactTable = new TableView<>();
         this.masterData = FXCollections.observableArrayList(controller.findAllArtifacts());
 		this.filteredData = new FilteredList<>(masterData, p -> true);
@@ -56,6 +63,7 @@ public class ArtifactView extends VBox{
             private final Button editButton = new Button("Edit");
             private final Button deleteButton = new Button("Delete");
             private final Button unassignButton = new Button("Unassign");
+            private final Button transferButton = new Button("Transfers");
             private final HBox buttons = new HBox(5);
             {
                 viewButton.setOnAction(e -> {
@@ -88,6 +96,11 @@ public class ArtifactView extends VBox{
 					Wizard owner = artifact.getOwner();
 					showUnassignArtifactDialogFor(owner, artifact);
                 });
+                
+                transferButton.setOnAction(e -> {
+                    Artifact artifact = getTableView().getItems().get(getIndex());
+                    showTransferDialog(artifact);
+                });
             }
             
 
@@ -100,7 +113,7 @@ public class ArtifactView extends VBox{
                     buttons.getChildren().clear();
                     buttons.getChildren().add(viewButton);
                     if (DataStore.getInstance().getCurrentUser().isAdmin()) {
-                        buttons.getChildren().addAll(editButton, deleteButton, unassignButton);
+                        buttons.getChildren().addAll(editButton, deleteButton, unassignButton, transferButton);
                     }
                     setGraphic(buttons);
                 }
@@ -215,6 +228,36 @@ public class ArtifactView extends VBox{
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         dialog.showAndWait();
     }
+    
+private void showTransferDialog(Artifact artifact) {
+    	if (artifact == null) return;
+
+    	Collection<Transfer> transferList = transferController.findAllTransfersById(artifact.getId());
+
+    	Dialog<Void> dialog = new Dialog<>();
+    	dialog.setTitle("Transfer Details");
+    	dialog.setHeaderText("Viewing Transfers for: " + artifact.getName());
+
+    	StringBuilder sb = new StringBuilder();
+    	for (Transfer transfer : transferList) {
+        	sb.append("ID: ").append(transfer.getId()).append("\n")
+          		.append("Type: ").append(transfer.getType()).append("\n")
+          		.append("Wizard: ").append(transfer.getWizard().getName()).append("\n")
+          		.append("Timestamp: ").append(transfer.getTimestamp()).append("\n")
+          		.append("--------").append("\n");
+    	}
+
+    	TextArea details = new TextArea(sb.toString());
+    	details.setEditable(false);
+    	details.setWrapText(true);
+
+    	VBox content = new VBox(details);
+    	content.setPadding(new Insets(10));
+
+    	dialog.getDialogPane().setContent(content);
+    	dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+    	dialog.showAndWait();
+}
     
     private void showUnassignArtifactDialogFor(Wizard wizard, Artifact artifact) {
     	if (artifact == null || wizard == null) {
