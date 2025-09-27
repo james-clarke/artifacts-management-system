@@ -233,6 +233,7 @@ public class ArtifactView extends VBox{
             	wizController.unassignArtifactFromWizard(wizard, artifact);
             	masterData.setAll(controller.findAllArtifacts());
             	artifactTable.getSelectionModel().select(artifact);
+				
             }
     	});
     }

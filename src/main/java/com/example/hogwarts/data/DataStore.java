@@ -112,7 +112,7 @@ public class DataStore {
         return true;
     }
     
-    public boolean unassignArtifactFromWizard(int artifactId, int wizardId) {
+    public boolean unassignArtifactFromWizard(int wizardId, int artifactId) {
     	Artifact artifact = this.artifacts.get(artifactId);
     	Wizard wizard = this.wizards.get(wizardId);
     	if (artifact == null || wizard == null) return false;
