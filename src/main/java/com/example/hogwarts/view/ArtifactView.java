@@ -9,6 +9,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -17,7 +18,8 @@ public class ArtifactView extends VBox{
     private final ArtifactController controller;
     private final WizardController wizController;
     private final TableView<Artifact> artifactTable;
-    private final ObservableList<Artifact> artifactData;
+	private final ObservableList<Artifact> masterData;
+	private final FilteredList<Artifact> filteredData;
     
     private static Runnable artifactSignal;
 
@@ -25,14 +27,15 @@ public class ArtifactView extends VBox{
         this.controller = new ArtifactController();
         this.wizController = new WizardController();
         this.artifactTable = new TableView<>();
-        this.artifactData = FXCollections.observableArrayList(controller.findAllArtifacts());
+        this.masterData = FXCollections.observableArrayList(controller.findAllArtifacts());
+		this.filteredData = new FilteredList<>(masterData, p -> true);
 
         setSpacing(10);
         setPadding(new Insets(10));
-        getChildren().addAll(createTable(), createButtons());
+        getChildren().addAll(createSearchBar(), createTable(), createButtons());
         
         // lambda to refresh table data
-		artifactSignal = () -> artifactData.setAll(controller.findAllArtifacts());
+		artifactSignal = () -> masterData.setAll(controller.findAllArtifacts());
     }
     
 	// adds auto-update functionality across views
@@ -75,7 +78,7 @@ public class ArtifactView extends VBox{
                     confirm.showAndWait().ifPresent(response -> {
                         if (response == ButtonType.OK) {
                             controller.deleteArtifact(artifact.getId());
-                            artifactData.setAll(controller.findAllArtifacts());
+                            masterData.setAll(controller.findAllArtifacts());
                         }
                     });
                 });
@@ -91,7 +94,7 @@ public class ArtifactView extends VBox{
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getIndex() >= artifactData.size()) {
+                if (empty || getIndex() >= masterData.size()) {
                     setGraphic(null);
                 } else {
                     buttons.getChildren().clear();
@@ -119,7 +122,7 @@ public class ArtifactView extends VBox{
         });
 
         artifactTable.getColumns().setAll(idCol, nameCol, actionCol, ownerCol);
-        artifactTable.setItems(artifactData);
+        artifactTable.setItems(filteredData);
         artifactTable.setPrefHeight(300);
         return artifactTable;
     }
@@ -156,7 +159,7 @@ public class ArtifactView extends VBox{
         });
 
         dialog.showAndWait().ifPresent(artifact -> {
-            artifactData.setAll(controller.findAllArtifacts());
+            masterData.setAll(controller.findAllArtifacts());
             artifactTable.getSelectionModel().select(artifact);
         });
     }
@@ -180,7 +183,7 @@ public class ArtifactView extends VBox{
         dialog.setResultConverter(button -> {
             if (button == ButtonType.OK) {
                 controller.updateArtifact(artifact.getId(), nameField.getText(), descField.getText());
-                artifactData.setAll(controller.findAllArtifacts());
+                masterData.setAll(controller.findAllArtifacts());
             }
             return null;
         });
@@ -228,9 +231,29 @@ public class ArtifactView extends VBox{
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
             	wizController.unassignArtifactFromWizard(wizard, artifact);
-            	artifactData.setAll(controller.findAllArtifacts());
+            	masterData.setAll(controller.findAllArtifacts());
             	artifactTable.getSelectionModel().select(artifact);
             }
     	});
     }
+    
+    private HBox createSearchBar() {
+    	Label searchLabel = new Label("Search:");
+    	TextField searchField = new TextField();
+    	searchField.setPromptText("Enter artifact name");
+
+    	searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+        	String filter = newVal.toLowerCase();
+        	filteredData.setPredicate(artifact -> {
+            	if (filter == null || filter.isEmpty()) {
+                	return true;
+            	}
+            	return artifact.getName().toLowerCase().contains(filter);
+        	});
+    	});
+
+    	HBox box = new HBox(10, searchLabel, searchField);
+    	box.setPadding(new Insets(0, 0, 10, 0));
+    	return box;
+	}
 }
