@@ -36,9 +36,19 @@ public class WizardController {
         this.store.deleteWizardById(id);
     }
 
-    public boolean assignArtifactToWizard(Wizard wizard, Artifact artifact) {
-		transferController.addTransfer("assign", artifact, wizard);
-        return this.store.assignArtifactToWizard(artifact.getId(), wizard.getId());
+    public String assignArtifactToWizard(Artifact artifact, Wizard wizard) {
+        String blockReason = store.getAssignmentBlockReason(artifact.getId());
+        if (blockReason != null) {
+            return blockReason;
+        }
+        
+        transferController.addTransfer("assign", artifact, wizard);
+        boolean success = store.assignArtifactToWizard(artifact.getId(), wizard.getId());
+        if (success) {
+            return null;
+        } else {
+            return "Assignment failed: Wizard or artifact not found.";
+        }
     }
     
     public boolean unassignArtifactFromWizard(Wizard wizard, Artifact artifact) {

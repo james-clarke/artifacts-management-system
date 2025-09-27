@@ -30,4 +30,16 @@ public class ArtifactController {
     public void deleteArtifact(int id) {
         this.store.deleteArtifactById(id);
     }
+    
+    public void repairArtifact(int id, int repairAmount) {
+        Artifact artifact = this.store.findArtifactById(id);
+        if(artifact == null) {
+            throw new NoSuchElementException("Artifact with ID " + id + " not found.");
+        }
+        artifact.repair(repairAmount);
+    }
+
+    public Artifact findArtifactById(int id) {
+        return this.store.findArtifactById(id);
+    }
 }

@@ -8,6 +8,7 @@ import com.example.hogwarts.model.Artifact;
 import com.example.hogwarts.model.Wizard;
 import com.example.hogwarts.model.Wizard;
 import com.example.hogwarts.model.Transfer;
+import com.example.hogwarts.view.WizardView;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -56,6 +57,22 @@ public class ArtifactView extends VBox{
 
         TableColumn<Artifact, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getName()));
+
+        TableColumn<Artifact, Number> conditionCol = new TableColumn<>("Condition");
+        conditionCol.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getCondition()));
+        conditionCol.setCellFactory(col -> new TableCell<Artifact, Number>() {
+            @Override
+            protected void updateItem(Number condition, boolean empty) {
+                super.updateItem(condition, empty);
+                if (empty || condition == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    int conditionValue = condition.intValue();
+                    setText(conditionValue + "%");
+                }
+            }
+        });
 
         TableColumn<Artifact, Void> actionCol = new TableColumn<>("Actions");
         actionCol.setCellFactory(col -> new TableCell<>() {
@@ -216,7 +233,8 @@ public class ArtifactView extends VBox{
                 "ID: " + artifact.getId() + "\n" +
                         "Name: " + artifact.getName() + "\n" +
                         "Description: " + artifact.getDescription() + "\n" +
-                        "Owner: " + ownerName
+                        "Owner: " + ownerName + "\n" +
+                        "Condition: " + artifact.getCondition() + "%"
         );
         details.setEditable(false);
         details.setWrapText(true);
@@ -276,7 +294,7 @@ private void showTransferDialog(Artifact artifact) {
             	wizController.unassignArtifactFromWizard(wizard, artifact);
             	masterData.setAll(controller.findAllArtifacts());
             	artifactTable.getSelectionModel().select(artifact);
-				
+				WizardView.updateTable();
             }
     	});
     }
@@ -300,4 +318,66 @@ private void showTransferDialog(Artifact artifact) {
     	box.setPadding(new Insets(0, 0, 10, 0));
     	return box;
 	}
+	
+	private void showRepairArtifactDialog(Artifact artifact) {
+        if (artifact == null) return;
+
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Repair Artifact");
+        dialog.setHeaderText("Repair: " + artifact.getName());
+
+        Label currentConditionLabel = new Label("Current Condition: " + artifact.getCondition() + "%");
+        TextField repairAmountField = new TextField();
+        repairAmountField.setPromptText("Enter repair amount (1-100)");
+        
+        Label instructionLabel = new Label("Enter the amount to increase condition by:");
+
+        VBox content = new VBox(10, 
+            currentConditionLabel, 
+            instructionLabel,
+            new Label("Repair Amount:"), 
+            repairAmountField
+        );
+        content.setPadding(new Insets(10));
+
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.setResultConverter(button -> {
+            if (button == ButtonType.OK) {
+                try {
+                    int repairAmount = Integer.parseInt(repairAmountField.getText().trim());
+                    if (repairAmount < 1 || repairAmount > 100) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Invalid Input");
+                        alert.setHeaderText("Invalid Repair Amount");
+                        alert.setContentText("Repair amount must be between 1 and 100.");
+                        alert.showAndWait();
+                        return null;
+                    }
+                    
+                    controller.repairArtifact(artifact.getId(), repairAmount);
+                    masterData.setAll(controller.findAllArtifacts());
+                    
+                    // Show success message with new condition
+                    Alert success = new Alert(Alert.AlertType.INFORMATION);
+                    success.setTitle("Repair Successful");
+                    success.setHeaderText("Artifact Repaired");
+                    success.setContentText("\"" + artifact.getName() + "\" has been repaired.\nNew condition: " + 
+                                         artifact.getCondition() + "%");
+                    success.showAndWait();
+                    
+                } catch (NumberFormatException e) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Invalid Input");
+                    alert.setHeaderText("Invalid Number");
+                    alert.setContentText("Please enter a valid number for repair amount.");
+                    alert.showAndWait();
+                }
+            }
+            return null;
+        });
+
+        dialog.showAndWait();
+    }
 }

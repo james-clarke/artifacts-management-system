@@ -35,20 +35,65 @@ public class DataStore {
         this.users.add(new User("admin", "123", Role.ADMIN));
         this.users.add(new User("user", "123", Role.USER));
 
-        // Sample data
+        // Sample data was AI generated
         Wizard w1 = new Wizard("Harry Potter");
         Wizard w2 = new Wizard("Hermione Granger");
+        Wizard w3 = new Wizard("Ron Weasley");
+        Wizard w4 = new Wizard("Albus Dumbledore");
+        Wizard w5 = new Wizard("Severus Snape");
+        
         this.addWizard(w1);
         this.addWizard(w2);
+        this.addWizard(w3);
+        this.addWizard(w4);
+        this.addWizard(w5);
 
         Artifact a1 = new Artifact("Invisibility Cloak", "A magical cloak that makes the wearer invisible.");
         Artifact a2 = new Artifact("Time-Turner", "A device used for time travel.");
+        Artifact a3 = new Artifact("Elder Wand", "The most powerful wand in existence.");
+        Artifact a4 = new Artifact("Marauder's Map", "A magical map showing Hogwarts and everyone in it.");
+        Artifact a5 = new Artifact("Sorting Hat", "An ancient hat that sorts students into houses.");
+        Artifact a6 = new Artifact("Philosopher's Stone", "A legendary stone that grants immortality.");
+        Artifact a7 = new Artifact("Pensieve", "A basin for reviewing memories.");
+        Artifact a8 = new Artifact("Golden Snitch", "A flying golden ball used in Quidditch.");
+        Artifact a9 = new Artifact("Nimbus 2000", "A high-performance racing broomstick.");
+        Artifact a10 = new Artifact("Broken Wand", "A damaged wand with unstable magic.");
 
         this.addArtifact(a1);
         this.addArtifact(a2);
+        this.addArtifact(a3);
+        this.addArtifact(a4);
+        this.addArtifact(a5);
+        this.addArtifact(a6);
+        this.addArtifact(a7);
+        this.addArtifact(a8);
+        this.addArtifact(a9);
+        this.addArtifact(a10);
 
-        this.assignArtifactToWizard(a1.getId(), w1.getId());
-        this.assignArtifactToWizard(a2.getId(), w2.getId());
+        a1.setCondition(100); // Perfect condition
+        a2.setCondition(85);  // Good condition
+        a3.setCondition(70);  // Fair condition
+        a4.setCondition(45);  // Poor condition
+        a5.setCondition(25);  // Very poor condition
+        a6.setCondition(90);  // Excellent condition
+        a7.setCondition(60);  // Fair condition
+        a8.setCondition(30);  // Poor condition
+        a9.setCondition(5);   // Critical condition (cannot be assigned)
+        a10.setCondition(8);  // Critical condition (cannot be assigned)
+
+        this.assignArtifactToWizard(a1.getId(), w1.getId()); // Harry gets Invisibility Cloak
+        this.assignArtifactToWizard(a2.getId(), w2.getId()); // Hermione gets Time-Turner
+        this.assignArtifactToWizard(a4.getId(), w1.getId()); // Harry also gets Marauder's Map
+        this.assignArtifactToWizard(a6.getId(), w4.getId()); // Dumbledore gets Philosopher's Stone
+        this.assignArtifactToWizard(a7.getId(), w4.getId()); // Dumbledore also gets Pensieve
+        
+        // Reset conditions after assignment to show proper initial state
+        // (compensate for the -5 wear from assignment)
+        a1.setCondition(100);
+        a2.setCondition(85);
+        a4.setCondition(45);
+        a6.setCondition(90);
+        a7.setCondition(60);
     }
 
     public static DataStore getInstance() {
@@ -128,8 +173,25 @@ public class DataStore {
         Wizard wizard = this.wizards.get(wizardId);
         if (artifact == null || wizard == null) return false;
 
+        if (!artifact.canBeAssigned()) {
+            return false;
+        }
+
+        artifact.applyWear(5);
+        
         wizard.addArtifact(artifact);
         return true;
+    }
+    
+    public String getAssignmentBlockReason(int artifactId) {
+        Artifact artifact = this.artifacts.get(artifactId);
+        if (artifact == null) return "Artifact not found";
+        
+        if (!artifact.canBeAssigned()) {
+            return "Artifact condition is too low (< 10). Please repair before assigning.";
+        }
+        
+        return null;
     }
     
     public boolean unassignArtifactFromWizard(int wizardId, int artifactId) {
@@ -148,7 +210,4 @@ public class DataStore {
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
     }
-
-
-
 }
