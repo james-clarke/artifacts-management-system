@@ -138,22 +138,28 @@ public class ArtifactView extends VBox{
         });
         
         TableColumn<Artifact, String> ownerCol = new TableColumn<>("Owner");
-        ownerCol.setComparator((owner1, owner2) -> {
-        	if (owner1.contentEquals("-")) { return 1; }
-        	if (owner2.contentEquals("-")) { return -1; }
-        	return owner1.compareTo(owner2);
-        });
         ownerCol.setCellValueFactory(cell -> {
-        	Wizard owner = cell.getValue().getOwner();
-        	if (owner != null) {
+    		Wizard owner = cell.getValue().getOwner();
+    		if (owner != null) {
         		return new ReadOnlyStringWrapper(owner.getName());
-        	}
-        	return new ReadOnlyStringWrapper("-");
-        });
+    		}
+    		return new ReadOnlyStringWrapper("-");
+		});
 
-        artifactTable.getColumns().setAll(idCol, nameCol, actionCol, ownerCol);
+        artifactTable.getColumns().setAll(idCol, nameCol, conditionCol, actionCol, ownerCol);
         artifactTable.setItems(filteredData);
         artifactTable.setPrefHeight(300);
+		
+		ownerCol.setSortable(true); // Explicit, just in case
+
+		ownerCol.setComparator((a, b) -> {
+    		boolean aEmpty = a == null || a.equals("-");
+    		boolean bEmpty = b == null || b.equals("-");
+    		if (aEmpty && !bEmpty) return 1;
+    		if (!aEmpty && bEmpty) return -1;
+    		return a.compareTo(b);
+		});
+		
         return artifactTable;
     }
 
